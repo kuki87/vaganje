@@ -6,29 +6,27 @@
 <title>Mjerenje paketa</title>
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
---bg:#eef0ea;--fg:#1b2420;--mut:#5d6b64;--card:#fbfcf9;--line:#cfd6cc;--acc:#1f5f4a;--accfg:#fff;--cv:#dfe4db}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141a17;--fg:#e6ece7;--mut:#93a39a;--card:#1d2621;--line:#33413a;--acc:#5fc49d;--accfg:#0d1a14;--cv:#0f1512}}
-:root[data-theme="dark"]{--bg:#141a17;--fg:#e6ece7;--mut:#93a39a;--card:#1d2621;--line:#33413a;--acc:#5fc49d;--accfg:#0d1a14;--cv:#0f1512}
+color-scheme:dark;--bg:#111111;--fg:#f0f0f0;--mut:#8a8a8a;--card:#1e1e1e;--line:#343434;--acc:#f47920;--accfg:#111111;--cv:#0f0f0f;--tint:#2a1800;--inp:#2a2a2a}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.45 "Segoe UI",system-ui,-apple-system,sans-serif}
 main{max-width:640px;margin:0 auto;padding:16px}
-h1{font:700 24px/1.2 Georgia,"Times New Roman",serif;margin:0 0 4px}
+h1{font:800 22px/1.2 "Segoe UI",system-ui,sans-serif;margin:0 0 4px}.lg{color:var(--acc);font-weight:900;margin-right:4px}
 .sub{color:var(--mut);margin:0 0 16px;font-size:14px}
 section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px}
 label{font-size:13px;color:var(--mut);display:block;margin-bottom:4px}
-select,input[type=number],input[type=text]{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit}
+select,input[type=number],input[type=text]{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--inp);color:var(--fg);font:inherit}
 .row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1 1 100px}
 button,.btn{padding:11px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:600 15px inherit;font-family:inherit;text-align:center;cursor:pointer}
 button.main,.btn.main{background:var(--acc);color:var(--accfg);border-color:var(--acc)}
-.tab[aria-pressed=true],.mode[aria-pressed=true],#adj[aria-pressed=true]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.tab[aria-pressed=true],.mode[aria-pressed=true],#adj[aria-pressed=true]{background:var(--tint);color:var(--acc);border-color:var(--acc)}
 button:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 #hint{font-weight:600;margin:10px 0 8px;min-height:24px}
 #wrap{position:relative;background:var(--cv);border-radius:8px;overflow:hidden}
 #cv{display:block;width:100%;touch-action:none}
 #lp{position:absolute;display:none;width:120px;height:120px;pointer-events:none}
 .res{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
-.res b{display:block;font:700 26px Georgia,serif}.res span{font-size:13px;color:var(--mut)}
+.res b{display:block;font:700 26px "Segoe UI",system-ui,sans-serif;color:var(--acc)}.res span{font-size:13px;color:var(--mut)}
 dl{margin:10px 0 0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}dt{color:var(--mut)}dd{margin:0;font-weight:600;text-align:right}
 .scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:6px;border-bottom:1px solid var(--line);text-align:left}
 .tip{font-size:13px;color:var(--mut);margin:8px 0 0}
@@ -44,7 +42,7 @@ dl{margin:10px 0 0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}dt{c
 </head>
 <body>
 <main>
-<h1>Mjerenje paketa</h1>
+<h1><span class="lg">X</span> Mjerenje paketa</h1>
 <p class="sub">Paketi (D, Š, V) i palete (visina) iz fotografija.</p>
 <div class="row" style="margin-bottom:12px"><button class="mode" aria-pressed="true">Paket (D, Š, V)</button><button class="mode" aria-pressed="false">Paleta (visina)</button></div>
 

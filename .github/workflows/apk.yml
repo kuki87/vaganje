@@ -18,8 +18,18 @@ jobs:
       - run: npm install
       - run: npx cap add android
       - run: node patch-manifest.js
+      - name: Install app icons
+        run: cp -r icons/res/. android/app/src/main/res/
       - run: npx cap sync android
+      - name: Use fixed debug key (so updates install over the old app)
+        run: |
+          D="${ANDROID_USER_HOME:-$HOME/.android}"
+          mkdir -p "$D"
+          cp debug.keystore "$D/debug.keystore"
       - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - name: Show signing fingerprint
+        continue-on-error: true
+        run: keytool -printcert -jarfile android/app/build/outputs/apk/debug/app-debug.apk | grep SHA256
       - uses: actions/upload-artifact@v4
         with:
           name: mjerenje-paketa-apk
