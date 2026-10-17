@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="bs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mjerenje paketa</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#eef0ea;--fg:#1b2420;--mut:#5d6b64;--card:#fbfcf9;--line:#cfd6cc;--acc:#1f5f4a;--accfg:#fff;--cv:#dfe4db}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141a17;--fg:#e6ece7;--mut:#93a39a;--card:#1d2621;--line:#33413a;--acc:#5fc49d;--accfg:#0d1a14;--cv:#0f1512}}
+:root[data-theme="dark"]{--bg:#141a17;--fg:#e6ece7;--mut:#93a39a;--card:#1d2621;--line:#33413a;--acc:#5fc49d;--accfg:#0d1a14;--cv:#0f1512}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.45 "Segoe UI",system-ui,-apple-system,sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px}
+h1{font:700 24px/1.2 Georgia,"Times New Roman",serif;margin:0 0 4px}
+.sub{color:var(--mut);margin:0 0 16px;font-size:14px}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px}
+label{font-size:13px;color:var(--mut);display:block;margin-bottom:4px}
+select,input[type=number],input[type=text]{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1 1 100px}
+button,.btn{padding:11px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:600 15px inherit;font-family:inherit;text-align:center;cursor:pointer}
+button.main,.btn.main{background:var(--acc);color:var(--accfg);border-color:var(--acc)}
+.tab[aria-pressed=true],.mode[aria-pressed=true],#adj[aria-pressed=true]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+button:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+#hint{font-weight:600;margin:10px 0 8px;min-height:24px}
+#wrap{position:relative;background:var(--cv);border-radius:8px;overflow:hidden}
+#cv{display:block;width:100%;touch-action:none}
+#lp{position:absolute;display:none;width:120px;height:120px;pointer-events:none}
+.res{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.res b{display:block;font:700 26px Georgia,serif}.res span{font-size:13px;color:var(--mut)}
+dl{margin:10px 0 0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}dt{color:var(--mut)}dd{margin:0;font-weight:600;text-align:right}
+.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:6px;border-bottom:1px solid var(--line);text-align:left}
+.tip{font-size:13px;color:var(--mut);margin:8px 0 0}
+#cam{position:fixed;inset:0;z-index:20;background:#000;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);--c:#fff}
+#cam[data-s=ok]{--c:#2ecc71}#cam[data-s=warn]{--c:#f5a623}#cam[data-s=bad]{--c:#ff5a5f}
+#vid{flex:1;min-height:0;width:100%;object-fit:contain}
+#lvl{position:absolute;left:0;right:0;top:50%;height:2px;background:rgba(255,255,255,.8)}
+#bub{position:absolute;left:50%;top:-13px;width:28px;height:28px;margin-left:-14px;border-radius:50%;border:3px solid #fff;background:var(--c);transition:transform .08s}
+#ang{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:0;right:0;text-align:center;font:700 22px system-ui,sans-serif;color:var(--c);text-shadow:0 1px 4px #000}
+#cbar{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:#000}#cbar button{flex:1}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<h1>Mjerenje paketa</h1>
+<p class="sub">Paketi (D, Š, V) i palete (visina) iz fotografija.</p>
+<div class="row" style="margin-bottom:12px"><button class="mode" aria-pressed="true">Paket (D, Š, V)</button><button class="mode" aria-pressed="false">Paleta (visina)</button></div>
+
+<section id="secRef">
+  <label for="ref">Referentni predmet (poznate dimenzije)</label>
+  <select id="ref"><option value="a4">A4 papir (210 × 297 mm)</option><option value="card">Bankovna kartica (85,6 × 54 mm)</option><option value="c">Prilagođeno</option></select>
+  <div class="row" id="cust" hidden style="margin-top:8px"><input id="cw" type="number" placeholder="Šira strana, mm"><input id="ch" type="number" placeholder="Uža strana, mm"></div>
+  <p class="tip">Položi referencu potpuno ravno na stranu koju mjeriš. Slikaj što okomitije, uglovi reference moraju biti vidljivi.</p>
+</section>
+
+<section id="secPal" hidden>
+  <label for="pz">Paleta (D × Š, cm)</label>
+  <select id="pz"><option value="120,80">EUR paleta 120 × 80</option><option value="120,100">120 × 100</option><option value="c">Prilagođeno</option></select>
+  <div class="row" id="pcust" hidden style="margin-top:8px"><input id="pd" type="number" placeholder="Dužina, cm"><input id="ps" type="number" placeholder="Širina, cm"></div>
+  <label for="pside" style="margin-top:8px">Koju stranu palete slikaš</label>
+  <select id="pside"><option value="0">Dužu stranu (D)</option><option value="1">Kraću stranu (Š)</option></select>
+  <label for="pph" style="margin-top:8px">Visina same palete (cm)</label>
+  <input id="pph" type="number" value="14.4">
+  <label style="display:flex;gap:8px;align-items:center;color:var(--fg);font-size:14px;margin-top:10px"><input type="checkbox" id="pflush" checked style="width:auto"> Teret je iste širine kao paleta</label>
+  <p class="tip">Stani 4 do 5 m od palete, telefon uspravno, u visini sredine tereta, okomito na stranu. Ne naginji telefon prema gore (nagib od 15° daje oko 5% veću visinu). Označi donja dva ugla palete, pa gornja dva ugla tereta (lijevo i desno kako ih vidiš).</p>
+</section>
+
+<section>
+  <div class="row" id="tabs">
+    <button class="tab" aria-pressed="true">1. Gornja strana (D, Š)</button>
+    <button class="tab" aria-pressed="false">2. Bočna strana (V)</button>
+  </div>
+  <div id="hint"></div>
+  <div id="wrap"><canvas id="cv" width="600" height="360"></canvas><canvas id="lp" width="120" height="120"></canvas></div>
+  <div class="row" style="margin-top:8px">
+    <label class="btn main" for="file" tabindex="0">Slikaj</label>
+    <label class="btn" for="gal" tabindex="0">Galerija</label>
+    <button id="live">Kamera s libelom</button>
+    <button id="undo">Poništi tačku</button>
+    <button id="adj" aria-pressed="false">Pomjeri</button>
+    <button id="reset">Obriši sve</button>
+  </div>
+  <input id="file" type="file" accept="image/*" capture="environment" hidden>
+  <input id="gal" type="file" accept="image/*" hidden>
+  <p class="tip">Tačke postavi dodirom i drži prst, lupa pokazuje tačno mjesto. Za pomjeranje već postavljene tačke uključi "Pomjeri" (nakon zadnje tačke je uključeno samo od sebe). Reference redom u krug (bilo koji ugao prvi).</p>
+</section>
+
+<section id="resPal" hidden>
+  <div class="res"><div><b id="pT">–</b><span>Visina ukupno cm</span></div><div><b id="pG">–</b><span>Visina robe cm</span></div><div><b id="pV">–</b><span>Obračunska težina kg</span></div></div>
+</section>
+
+<section id="resPkg">
+  <div class="res"><div><b id="rL">–</b><span>Dužina cm</span></div><div><b id="rW">–</b><span>Širina cm</span></div><div><b id="rH">–</b><span>Visina cm</span></div></div>
+  <dl><dt>Obračunska težina</dt><dd id="rVW">–</dd></dl>
+  <label for="div" style="margin-top:10px">Koeficijent (kg po m³)</label>
+  <input id="div" type="number" value="150">
+</section>
+
+<section>
+  <label for="nm">Oznaka paketa</label>
+  <div class="row"><input id="nm" type="text" placeholder="npr. paket 1"><button class="main" id="save" style="flex:0 0 auto">Sačuvaj</button></div>
+  <div class="scroll" style="margin-top:8px"><table><thead><tr><th>Oznaka</th><th>D</th><th>Š</th><th>V</th><th>Kg</th></tr></thead><tbody id="hist"></tbody></table></div>
+  <div class="row" style="margin-top:8px"><button id="csv">Kopiraj CSV</button><button id="clr">Obriši listu</button></div>
+</section>
+</main>
+
+<div id="cam" hidden>
+  <video id="vid" playsinline autoplay muted></video>
+  <div id="lvl"><div id="bub"></div></div>
+  <div id="ang">–</div>
+  <div id="cbar"><button class="main" id="cshot">Snimi</button><button id="cclose">Zatvori</button></div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const REF=["Referenca: 1. ugao","Referenca: 2. ugao","Referenca: 3. ugao","Referenca: 4. ugao"];
+const STEPS=[[...REF,"Dužina: početak","Dužina: kraj","Širina: početak","Širina: kraj"],[...REF,"Visina: donja tačka","Visina: gornja tačka"],["Paleta: donji lijevi ugao","Paleta: donji desni ugao","Teret: gornji lijevi ugao","Teret: gornji desni ugao"]];
+const S=[{img:null,pts:[]},{img:null,pts:[]},{img:null,pts:[]}];
+let cur=0,drag=-1,adj=false,lastPitch=null,stream=null;
+const cv=$('#cv'),cx=cv.getContext('2d'),lp=$('#lp'),lx=lp.getContext('2d');
+
+function refDims(){const v=$('#ref').value;if(v==='a4')return[210,297];if(v==='card')return[85.6,53.98];return[+$('#cw').value||0,+$('#ch').value||0];}
+
+// Homografija: 4 tačke slike -> koordinate reference u mm
+function homog(src,dst){
+  const A=[];
+  for(let i=0;i<4;i++){const[x,y]=src[i],[X,Y]=dst[i];
+    A.push([x,y,1,0,0,0,-x*X,-y*X,X]);A.push([0,0,0,x,y,1,-x*Y,-y*Y,Y]);}
+  for(let c=0;c<8;c++){
+    let p=c;for(let r=c+1;r<8;r++)if(Math.abs(A[r][c])>Math.abs(A[p][c]))p=r;
+    [A[c],A[p]]=[A[p],A[c]];const d=A[c][c];if(Math.abs(d)<1e-12)return null;
+    for(let k=c;k<9;k++)A[c][k]/=d;
+    for(let r=0;r<8;r++)if(r!==c){const f=A[r][c];for(let k=c;k<9;k++)A[r][k]-=f*A[c][k];}
+  }
+  return A.map(r=>r[8]);
+}
+const map=(h,[x,y])=>{const w=h[6]*x+h[7]*y+1;return[(h[0]*x+h[1]*y+h[2])/w,(h[3]*x+h[4]*y+h[5])/w];};
+const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+
+function measure(i){
+  const p=S[i].pts,[rw,rh]=refDims();
+  if(p.length<6||!rw||!rh)return null;
+  const lo=Math.min(rw,rh),hi=Math.max(rw,rh);
+  const sz=dist(p[0],p[1])>=dist(p[1],p[2])?[hi,lo]:[lo,hi];
+  const H=homog(p.slice(0,4),[[0,0],[sz[0],0],[sz[0],sz[1]],[0,sz[1]]]);
+  if(!H)return null;
+  const m=p.slice(4).map(q=>map(H,q));
+  const seg=(a,b)=>m[a]&&m[b]?dist(m[a],m[b])/10:null;
+  return i===0?{L:seg(0,1),W:seg(2,3)}:{H:seg(0,1)};
+}
+
+function fit(){
+  const im=S[cur].img,w=$('#wrap').clientWidth;
+  cv.width=w;cv.height=im?Math.round(w*im.height/im.width):Math.round(w*.6);
+  draw();
+}
+
+function draw(){
+  const s=S[cur],im=s.img;
+  cx.clearRect(0,0,cv.width,cv.height);
+  if(!im){
+    cx.fillStyle=getComputedStyle(document.body).color;cx.globalAlpha=.55;cx.font='15px system-ui';cx.textAlign='center';
+    cx.fillText('Još nema slike',cv.width/2,cv.height/2);cx.globalAlpha=1;update();return;
+  }
+  const k=cv.width/im.width,p=s.pts;
+  cx.drawImage(im,0,0,cv.width,cv.height);
+  const line=(a,b,c)=>{cx.strokeStyle=c;cx.lineWidth=2;cx.beginPath();cx.moveTo(p[a][0]*k,p[a][1]*k);cx.lineTo(p[b][0]*k,p[b][1]*k);cx.stroke();};
+  if(cur===2){[[0,1],[2,3],[0,2],[1,3]].forEach(([a,b])=>{if(p[a]&&p[b])line(a,b,'#e5484d');});}
+  else{
+    if(p.length>=4)for(let i=0;i<4;i++)line(i,(i+1)%4,'#f59e0b');
+    else for(let i=1;i<p.length;i++)line(i-1,i,'#f59e0b');
+    for(let i=4;i+1<p.length;i+=2)line(i,i+1,'#e5484d');
+  }
+  p.forEach((q,i)=>{cx.fillStyle=(cur===2?i<2:i<4)?'#f59e0b':'#e5484d';cx.beginPath();cx.arc(q[0]*k,q[1]*k,5,0,7);cx.fill();});
+  update();
+}
+
+function loupe(x,y){
+  const s=S[cur],k=cv.width/s.img.width,z=4,R=60;
+  lp.style.display='block';lp.style.top='8px';
+  lp.style.left=(x<cv.width/2?cv.width-2*R-8:8)+'px';
+  lx.clearRect(0,0,2*R,2*R);lx.save();lx.beginPath();lx.arc(R,R,R,0,7);lx.clip();
+  const sw=2*R/(k*z);
+  lx.drawImage(s.img,x/k-sw/2,y/k-sw/2,sw,sw,0,0,2*R,2*R);lx.restore();
+  lx.strokeStyle='#e5484d';lx.lineWidth=1.5;lx.beginPath();
+  lx.moveTo(R-12,R);lx.lineTo(R+12,R);lx.moveTo(R,R-12);lx.lineTo(R,R+12);lx.stroke();
+  lx.strokeStyle='#fff';lx.lineWidth=3;lx.beginPath();lx.arc(R,R,R-1.5,0,7);lx.stroke();
+}
+
+const pos=e=>{const r=cv.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top];};
+cv.addEventListener('pointerdown',e=>{
+  const s=S[cur];if(!s.img)return;
+  e.preventDefault();cv.setPointerCapture(e.pointerId);
+  const k=cv.width/s.img.width,[x,y]=pos(e);let best=-1,bd=28;
+  if(adj||s.pts.length>=STEPS[cur].length)s.pts.forEach((q,i)=>{const d=Math.hypot(q[0]*k-x,q[1]*k-y);if(d<bd){bd=d;best=i;}});
+  else{s.pts.push([x/k,y/k]);best=s.pts.length-1;}
+  drag=best;if(drag>=0)loupe(x,y);draw();
+});
+cv.addEventListener('pointermove',e=>{
+  if(drag<0)return;
+  const s=S[cur],k=cv.width/s.img.width,[x,y]=pos(e);
+  s.pts[drag]=[Math.min(Math.max(x/k,0),s.img.width),Math.min(Math.max(y/k,0),s.img.height)];
+  loupe(x,y);draw();
+});
+const end=()=>{drag=-1;lp.style.display='none';draw();};
+cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
+
+document.querySelectorAll('#file,#gal').forEach(inp=>inp.addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  const u=URL.createObjectURL(f),im=new Image();
+  im.onload=()=>{
+    const sc=Math.min(1,2000/Math.max(im.width,im.height)),c=document.createElement('canvas');
+    c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);
+    c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+    S[cur]={img:c,pts:[]};URL.revokeObjectURL(u);e.target.value='';fit();
+  };
+  im.src=u;
+}));
+document.querySelectorAll('label.btn[for]').forEach(l=>l.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('#'+l.htmlFor).click();}}));
+$('#adj').onclick=()=>{adj=!adj;$('#adj').setAttribute('aria-pressed',adj);};
+
+document.querySelectorAll('.tab').forEach((b,i)=>b.onclick=()=>{
+  cur=i;document.querySelectorAll('.tab').forEach((t,j)=>t.setAttribute('aria-pressed',j===i));fit();
+});
+$('#undo').onclick=()=>{S[cur].pts.pop();draw();};
+$('#reset').onclick=()=>{S[0]={img:null,pts:[]};S[1]={img:null,pts:[]};S[2]={img:null,pts:[]};fit();};
+$('#ref').addEventListener('input',()=>{$('#cust').hidden=$('#ref').value!=='c';update();});
+['#cw','#ch','#div'].forEach(s=>$(s).addEventListener('input',update));
+
+let cur_res={};
+function update(){
+  const s=S[cur],n=s.pts.length,st=STEPS[cur];
+  $('#hint').textContent=!s.img?'Slikaj ili odaberi sliku.':n<st.length?`Tačka ${n+1} od ${st.length}: ${st[n]}`:'Sve tačke su postavljene. Povuci tačku za finije podešavanje.'+(cur===2&&s.pitch!=null?' Nagib pri snimanju: '+s.pitch.toFixed(1)+'°'+(Math.abs(s.pitch)>3?' (previše nagnuto, ponovi snimak)':''):'');
+  const a=measure(0),b=measure(1),L=a&&a.L,W=a&&a.W,H=b&&b.H;
+  const f=v=>v?v.toFixed(1):'–';
+  $('#rL').textContent=f(L);$('#rW').textContent=f(W);$('#rH').textContent=f(H);
+  if(L&&W&&H){
+    const v=L*W*H,dv=+$('#div').value||150;
+    const kg=(v/1e6*dv).toFixed(2);cur_res={L:+L.toFixed(1),W:+W.toFixed(1),H:+H.toFixed(1),vw:kg+' kg'};
+    $('#rVW').textContent=kg+' kg';
+  }else{cur_res={};$('#rVW').textContent='–';}
+  const q=pal(),ok=q&&q.goods>0;
+  $('#pT').textContent=q?Math.round(q.tot):'–';
+  $('#pG').textContent=ok?Math.round(q.goods):'–';
+  $('#pV').textContent=ok?(q.d*q.s*q.tot/1e6*(+$('#div').value||150)).toFixed(1):'–';
+  if(mode==='pal')cur_res=ok?{L:q.d,W:q.s,H:Math.round(q.tot),vw:(q.d*q.s*q.tot/1e6*(+$('#div').value||150)).toFixed(2)+' kg'}:{};
+}
+
+let hist=[];
+try{hist=JSON.parse(localStorage.getItem('mjerenja')||'[]');}catch(e){}
+function persist(){try{localStorage.setItem('mjerenja',JSON.stringify(hist));}catch(e){}}
+function renderH(){
+  const t=$('#hist');t.textContent='';
+  hist.forEach(r=>{const tr=document.createElement('tr');
+    [r.n,r.L,r.W,r.H,r.vw].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.appendChild(td);});t.appendChild(tr);});
+}
+$('#save').onclick=()=>{
+  if(!cur_res.L){$('#hint').textContent='Za čuvanje izmjeri sve tri dimenzije.';return;}
+  hist.unshift({n:$('#nm').value.trim()||((mode==='pal'?'paleta ':'paket ')+(hist.length+1)),...cur_res});
+  persist();renderH();$('#nm').value='';
+};
+$('#clr').onclick=()=>{hist=[];persist();renderH();};
+$('#csv').onclick=async()=>{
+  const txt='oznaka;duzina_cm;sirina_cm;visina_cm;kg\n'+hist.map(r=>[String(r.n).replace(/;/g,','),r.L,r.W,r.H,r.vw].join(';')).join('\n');
+  try{await navigator.clipboard.writeText(txt);$('#hint').textContent='CSV kopiran.';}catch(e){$('#hint').textContent='Kopiranje nije dozvoljeno u ovom pregledniku.';}
+};
+
+let mode='pkg';
+function pal(){
+  let p=S[2].pts;if(p.length<4)return null;
+  if((p[1][0]-p[0][0])*(p[3][0]-p[2][0])+(p[1][1]-p[0][1])*(p[3][1]-p[2][1])<0)p=[p[0],p[1],p[3],p[2]];
+  const [d,s]=$('#pz').value==='c'?[+$('#pd').value||0,+$('#ps').value||0]:$('#pz').value.split(',').map(Number);
+  const len=$('#pside').value==='0'?d:s;if(!len)return null;
+  const wb=dist(p[0],p[1]),wt=dist(p[2],p[3]);if(!wb||!wt)return null;
+  const sb=len/wb,st=len/wt,sc=$('#pflush').checked?(sb+st)/2:sb;
+  const tot=(dist(p[0],p[2])+dist(p[1],p[3]))/2*sc;
+  return{tot,goods:tot-(+$('#pph').value||0),d,s};
+}
+document.querySelectorAll('.mode').forEach((b,i)=>b.onclick=()=>{
+  mode=i?'pal':'pkg';cur=i?2:0;
+  document.querySelectorAll('.mode').forEach((t,j)=>t.setAttribute('aria-pressed',j===i));
+  document.querySelectorAll('.tab').forEach((t,j)=>t.setAttribute('aria-pressed',j===0));
+  $('#secRef').hidden=!!i;$('#tabs').hidden=!!i;$('#secPal').hidden=!i;$('#resPkg').hidden=!!i;$('#resPal').hidden=!i;
+  fit();
+});
+$('#pz').addEventListener('input',()=>{$('#pcust').hidden=$('#pz').value!=='c';update();});
+['#pd','#ps','#pside','#pph','#pflush'].forEach(s=>$(s).addEventListener('input',update));
+function closeCam(){
+  window.removeEventListener('deviceorientation',onOri);
+  if(stream)stream.getTracks().forEach(t=>t.stop());
+  stream=null;$('#vid').srcObject=null;$('#cam').hidden=true;
+}
+function onOri(e){
+  if(e.beta==null)return;
+  const p=e.beta-90,a=Math.abs(p);lastPitch=p;
+  $('#ang').textContent=(p>=0?'+':'')+p.toFixed(1)+'° '+(a<2?'ravno':p>0?'nagni dolje':'nagni gore');
+  $('#cam').dataset.s=a<2?'ok':a<5?'warn':'bad';
+  $('#bub').style.transform='translateY('+Math.max(-120,Math.min(120,-p*8))+'px)';
+}
+$('#live').onclick=async()=>{
+  try{if(window.DeviceOrientationEvent&&DeviceOrientationEvent.requestPermission)await DeviceOrientationEvent.requestPermission();}catch(e){}
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920}},audio:false});}
+  catch(e){$('#hint').textContent='Kamera nije dostupna ovdje. Koristi "Slikaj" i uključi mrežu ili libelu u kameri telefona.';return;}
+  lastPitch=null;delete $('#cam').dataset.s;$('#ang').textContent='Čekam senzor nagiba...';
+  $('#vid').srcObject=stream;$('#cam').hidden=false;
+  window.addEventListener('deviceorientation',onOri);
+  setTimeout(()=>{if(lastPitch===null&&!$('#cam').hidden)$('#ang').textContent='Senzor nagiba nedostupan (dozvoli pristup pokretu)';},2500);
+};
+$('#cclose').onclick=closeCam;
+$('#cshot').onclick=()=>{
+  const v=$('#vid');if(!v.videoWidth)return;
+  const sc=Math.min(1,2000/Math.max(v.videoWidth,v.videoHeight)),c=document.createElement('canvas');
+  c.width=Math.round(v.videoWidth*sc);c.height=Math.round(v.videoHeight*sc);
+  c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+  S[cur]={img:c,pts:[],pitch:lastPitch};closeCam();fit();
+};
+window.addEventListener('resize',fit);
+renderH();fit();
+</script>
+</body>
+</html>
